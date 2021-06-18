@@ -1,0 +1,21 @@
+.root {
+  padding: 1rem;
+}
+
+.table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table th {
+  font-size: 12px;
+  padding: 0.75em 0;
+}
+
+.table td {
+  text-align: center;
+}
+
+.table thead {
+
+}
