@@ -1,5 +1,5 @@
 import React from 'react';
-import css from './App.module.css';
+import styled from 'styled-components';
 import { getTypeColor, PokemonType, TYPES } from './constants';
 import { getEfficacy } from './typeEfficacies';
 
@@ -11,10 +11,10 @@ function getTypeStyle(typeName: PokemonType): React.CSSProperties {
   };
 }
 
-function App() {
+export default function App() {
   return (
-    <div className={css.root}>
-      <table className={css.table}>
+    <Root>
+      <Table>
         <thead>
           <tr>
             <th></th>
@@ -39,9 +39,23 @@ function App() {
             </tr>
           ))}
         </tbody>
-      </table>
-    </div>
+      </Table>
+    </Root>
   );
 }
 
-export default App;
+const Root = styled.div`
+  padding: 1rem;
+`;
+
+const Table = styled.table`
+  table-layout: fixed;
+  width: 100%;
+  th {
+    font-size: 12px;
+    padding: 0.75em 0;
+  }
+  td {
+    text-align: center;
+  }
+`;
