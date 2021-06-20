@@ -16,8 +16,6 @@ const typeEfficaciesMap = _.chain(EFFICACIES.data.pokemon_v2_type)
   )
   .value();
 
-console.log(typeEfficaciesMap);
-
 export function getEfficacy(attacking: PokemonType, defending: PokemonType): number {
   return typeEfficaciesMap[attacking][defending];
 }
