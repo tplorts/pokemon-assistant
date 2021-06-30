@@ -1,17 +1,7 @@
 import _ from 'lodash';
 import { PokemonType } from './constants';
 import EFFICACIES from './type-efficacies.json';
-
-const typeNameMap = _.mapValues(_.keyBy(EFFICACIES.data.pokemon_v2_type, 'id'), 'name');
-const typeIdMap = _.fromPairs(_.toPairs(typeNameMap).map(([id, name]) => [name, parseInt(id)]));
-
-export function getTypeNameForTypeId(typeId: number):PokemonType {
-  return typeNameMap[typeId] as PokemonType;
-}
-
-export function getTypeIdForTypeName(typeName: PokemonType):number {
-  return typeIdMap[typeName];
-}
+import { getTypeNameForTypeId } from './types';
 
 const typeEfficaciesMap = _.chain(EFFICACIES.data.pokemon_v2_type)
   .keyBy('name')
@@ -28,13 +18,10 @@ const typeEfficaciesMap = _.chain(EFFICACIES.data.pokemon_v2_type)
   )
   .value();
 
-export function getEfficacy(
-  attacking: PokemonType,
-  defendingTypes: (PokemonType | null)[]
-): number {
+export function getEfficacy(attacking: PokemonType, defendingTypes: PokemonType[]): number {
+  const attackerEfficacies = typeEfficaciesMap[attacking];
   return defendingTypes.reduce(
-    (efficacyProduct, defendingType) =>
-      efficacyProduct * (defendingType == null ? 1 : typeEfficaciesMap[attacking][defendingType]),
+    (efficacyProduct, defendingType) => efficacyProduct * attackerEfficacies[defendingType],
     1
   );
 }

@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { getTypeColor, PokemonType, TYPES } from './constants';
-import { getEfficacy, getTypeIdForTypeName } from './typeEfficacies';
-import { areSetsEqual, c } from './utilities';
-import allPokemon from './all-pokemon.json';
+import { getPokemonContainingType, Pokemon } from './pokemon';
+import { getEfficacy } from './typeEfficacies';
+import { c } from './utilities';
 
 function getTypeStyle(typeName: PokemonType): React.CSSProperties {
   const color = getTypeColor(typeName);
@@ -17,10 +17,35 @@ function getEfficacyClass(efficacy: number): string {
   return (
     {
       0: 'none',
+      0.25: 'sub',
       0.5: 'sub',
       1: 'par',
       2: 'super',
+      4: 'super',
     }[efficacy] ?? ''
+  );
+}
+
+export function getEfficacyIndicator(efficacy: number): string {
+  return (
+    {
+      0: '∅',
+      1: '',
+      0.5: '⬇',
+      0.25: '⬇⬇',
+      2: '⬆',
+      4: '⬆⬆',
+    }[efficacy] ?? ''
+  );
+}
+
+export function getEfficacyMultiplier(efficacy: number): string {
+  return (
+    {
+      // 1
+      0.5: '½',
+      0.25: '¼',
+    }[efficacy] ?? efficacy.toString()
   );
 }
 
@@ -44,15 +69,12 @@ export default function TypeMatrix() {
     }
   };
 
-  let matchingPokemon: string[] = [];
-  if (selectedDefendingTypes.length === 2) {
-    const typeIds = new Set(selectedDefendingTypes.map(getTypeIdForTypeName));
-    matchingPokemon = allPokemon.data.pokemon_v2_pokemon
-      .filter((p) => {
-        const pTypeIds = new Set(p.pokemon_v2_pokemontypes.map((t) => t.type_id));
-        return areSetsEqual(typeIds, pTypeIds);
-      })
-      .map((p) => p.name);
+  let matchingPokemon: Pokemon[] = [];
+  if (selectedDefendingTypes.length > 0) {
+    matchingPokemon = getPokemonContainingType(selectedDefendingTypes[0]);
+    if (selectedDefendingTypes.length > 1) {
+      matchingPokemon = matchingPokemon.filter((p) => p.types.has(selectedDefendingTypes[1]));
+    }
   }
 
   return (
@@ -60,18 +82,16 @@ export default function TypeMatrix() {
       <Table className={c(anyTypeSelected && 'hasSelections')}>
         <thead>
           <tr>
-            <td />
-            <td />
+            <td colSpan={3} />
             <td colSpan={TYPES.length}>Defending</td>
           </tr>
-          <tr className="defending">
-            <td />
-            <td />
+          <tr>
+            <td colSpan={3} />
             {TYPES.map((typeName) => (
               <th
                 key={typeName}
                 style={getTypeStyle(typeName)}
-                className={c('defending', isSelected(typeName) && 'selected')}
+                className={c('defendingType', isSelected(typeName) && 'selected')}
                 onClick={() => toggleDefendingType(typeName)}
               >
                 {typeName}
@@ -81,34 +101,42 @@ export default function TypeMatrix() {
         </thead>
         <tbody>
           {TYPES.map((attackingType) => {
+            const efficacy =
+              selectedDefendingTypes.length > 0
+                ? getEfficacy(attackingType, selectedDefendingTypes)
+                : null;
             return (
-              <tr key={attackingType}>
-                <th>{anyTypeSelected && getEfficacy(attackingType, selectedDefendingTypes)}</th>
-                <th className="attacking" style={getTypeStyle(attackingType)}>
+              <tr key={attackingType} className={c(efficacy && `efficacy_${efficacy}`)}>
+                <th
+                  className={c('efficacyIndicator', efficacy != null && getEfficacyClass(efficacy))}
+                >
+                  {efficacy != null && getEfficacyIndicator(efficacy)}
+                </th>
+                <th className="efficacyMultiplier">
+                  {efficacy != null && getEfficacyMultiplier(efficacy)}
+                </th>
+                <th className="attackingType" style={getTypeStyle(attackingType)}>
                   {attackingType}
                 </th>
-                {TYPES.map((defendingType) => {
-                  const efficacy = getEfficacy(attackingType, [defendingType]);
-                  return (
-                    <td
-                      key={defendingType}
-                      className={c(
-                        getEfficacyClass(efficacy),
-                        isSelected(defendingType) && 'selected'
-                      )}
-                    />
-                  );
-                })}
+                {TYPES.map((defendingType) => (
+                  <td
+                    key={defendingType}
+                    className={c(
+                      getEfficacyClass(getEfficacy(attackingType, [defendingType])),
+                      isSelected(defendingType) && 'selected'
+                    )}
+                  />
+                ))}
               </tr>
             );
           })}
         </tbody>
       </Table>
-      <div>
+      <ul>
         {matchingPokemon.map((p) => (
-          <div key={p}>{p}</div>
+          <li key={p.id}>{p.name}</li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -116,22 +144,33 @@ export default function TypeMatrix() {
 const Table = styled.table`
   table-layout: fixed;
   width: 100%;
+  tr {
+    height: 2rem;
+  }
   th {
     font-size: 12px;
-    padding: 0.75em 0;
   }
   th,
   td {
     text-align: center;
     user-select: none;
   }
-  th.defending {
+  th.defendingType {
     cursor: pointer;
+  }
+  .efficacyIndicator {
+    text-align: right;
+    font-size: 1rem;
+    &.sub {
+      color: #d66;
+    }
+    &.super {
+      color: #6d6;
+    }
   }
   tbody td {
     background-color: #666;
     &.none {
-      /* background-color: #555; */
       &::after {
         content: '∅';
       }
@@ -154,7 +193,7 @@ const Table = styled.table`
     tbody td:not(.selected) {
       opacity: 0.4;
     }
-    th.attacking {
+    th.attackingType {
       opacity: 0.8;
     }
     tbody tr:hover {
