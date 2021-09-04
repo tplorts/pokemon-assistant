@@ -68,6 +68,10 @@ export default function TypeMatrix() {
     });
   };
 
+  const clearSelectedDefendingTypes = () => {
+    setSelectedDefendingTypes([]);
+  };
+
   let matchingPokemon: Pokemon[] = [];
   if (selectedDefendingTypes.length > 0) {
     matchingPokemon = getPokemonContainingType(selectedDefendingTypes[0]);
@@ -81,7 +85,9 @@ export default function TypeMatrix() {
       <Table className={c(anyTypeSelected && 'hasSelections')}>
         <thead>
           <tr>
-            <td colSpan={3} />
+            <td colSpan={3}>
+              <button onClick={clearSelectedDefendingTypes}>Clear</button>
+            </td>
             <td colSpan={TYPES.length}>Defending</td>
           </tr>
           <tr>
