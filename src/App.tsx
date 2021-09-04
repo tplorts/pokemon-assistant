@@ -6,8 +6,13 @@ export default function App() {
   return (
     <Root>
       <TypeMatrix />
+      <MatchingPokemonList />
     </Root>
   );
+}
+
+function MatchingPokemonList() {
+  return null;
 }
 
 const Root = styled.div`
