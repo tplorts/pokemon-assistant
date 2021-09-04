@@ -56,17 +56,16 @@ export default function TypeMatrix() {
   const isSelected = (typeName: PokemonType) => selectedDefendingTypes.includes(typeName);
 
   const toggleDefendingType = (typeName: PokemonType) => {
-    if (isSelected(typeName)) {
-      setSelectedDefendingTypes((prior) => prior.filter((t) => t !== typeName));
-    } else {
-      setSelectedDefendingTypes((prior) => {
-        const next = prior.concat(typeName);
-        if (next.length > 2) {
-          next.splice(0, 1);
-        }
-        return next;
-      });
-    }
+    setSelectedDefendingTypes((prior) => {
+      if (prior.includes(typeName)) {
+        return prior.filter((t) => t !== typeName);
+      }
+      const next = prior.concat(typeName);
+      if (next.length > 2) {
+        next.splice(0, 1);
+      }
+      return next;
+    });
   };
 
   let matchingPokemon: Pokemon[] = [];
